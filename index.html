@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小纖女體態檢索庫</title>
+  <style>
+    :root {
+      --bg: #F1ECE3;
+      --panel: #F7F3EA;
+      --panel2: #EDE9DF;
+      --text: #1E1E1C;
+      --muted: #8E887E;
+      --line: #D8D1C5;
+      --accent: #3F5A32;
+      --accent2: #5F7A4E;
+      --danger: #B42318;
+      --ok: #5F7A4E;
+      --shadow: 0 18px 45px rgba(30,30,28,.08);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, rgba(63,90,50,.12), transparent 34%), var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      line-height: 1.55;
+    }
+    .app { max-width: 1180px; margin: 0 auto; padding: 28px 18px 48px; }
+    .hero {
+      display: grid; grid-template-columns: 1fr; gap: 20px; align-items: end;
+      padding: 26px; border: 1px solid var(--line); border-radius: 28px;
+      background: linear-gradient(135deg, #F7F3EA, #F1ECE3);
+      box-shadow: var(--shadow);
+    }
+    .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+    h1 { margin: 8px 0 8px; color: var(--accent); font-size: clamp(30px, 4.6vw, 54px); line-height: 1.05; letter-spacing: -0.04em; }
+    .lead { margin: 0; color: var(--muted); max-width: 720px; font-size: 16px; }
+    .countBox { color: var(--muted); text-align: right; font-size: 14px; white-space: nowrap; }
+    .countBox b { color: var(--text); font-size: 28px; display:block; }
+    .librarySwitch { margin-top: 16px; display:flex; gap: 10px; flex-wrap: wrap; }
+    .libraryTab {
+      border: 1px solid var(--line); background: #FFFFFF; color: var(--text);
+      border-radius: 999px; padding: 10px 16px; cursor: pointer; transition: .15s; font-size: 14px; font-weight: 700;
+    }
+    .libraryTab:hover { border-color: #5F7A4E; background: #E7E6D9; }
+    .libraryTab.active { background: var(--accent); color: #F7F3EA; border-color: var(--accent); }
+
+    .layout { display: grid; grid-template-columns: 330px 1fr; gap: 18px; margin-top: 18px; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+    .panel h2 { font-size: 16px; margin: 0 0 12px; }
+    .hint { color: var(--muted); font-size: 13px; margin: -6px 0 14px; }
+    .humanWrap { position: relative; display: grid; place-items: center; padding: 10px 0 0; min-height: 350px; overflow: visible; }
+    .human { width: 190px; height: 320px; z-index: 1; }
+    .human .stroke { fill: none; stroke: rgba(63,90,50,.42); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .hotspot { cursor: pointer; fill: rgba(63,90,50,.08); stroke: rgba(95,122,78,.28); transition: .18s; }
+    .hotspot:hover, .hotspot.active { fill: rgba(63,90,50,.16); stroke: rgba(63,90,50,.72); }
+    .bodyBtns { position:absolute; inset: 0; z-index: 2; pointer-events:none; }
+    .bodyBtn, .chip, .smallBtn {
+      border: 1px solid var(--line); background: #FFFFFF; color: var(--text);
+      border-radius: 999px; padding: 10px 13px; cursor: pointer; transition: .15s; font-size: 14px;
+    }
+    .bodyBtn {
+      position: absolute; display:flex; justify-content:space-between; align-items:center; gap: 8px;
+      width: auto; min-width: 82px; padding: 8px 11px; border-radius: 999px; pointer-events:auto;
+      background: rgba(247,243,234,.92); backdrop-filter: blur(6px); box-shadow: 0 10px 24px rgba(30,30,28,.06);
+    }
+    .bodyBtn[data-body="肩頸"] { top: 22px; left: 50%; transform: translateX(-50%); }
+    .bodyBtn[data-body="腰背"] { top: 124px; left: 6px; }
+    .bodyBtn[data-body="骨盆臀型"] { top: 150px; right: 2px; }
+    .bodyBtn[data-body="腿型"] { top: 238px; right: 18px; }
+    .bodyBtn[data-body="足底"] { bottom: 0; left: 50%; transform: translateX(-50%); }
+    .bodyBtn span:last-child { color: var(--muted); font-size: 12px; }
+    .bodyBtn:hover, .chip:hover, .smallBtn:hover { border-color: #5F7A4E; background: #E7E6D9; }
+    .bodyBtn.active, .chip.active, .smallBtn.active { background: var(--accent); color: #F7F3EA; border-color: var(--accent); font-weight: 800; }
+    .bodyBtn.active span:last-child { color: rgba(247,243,234,.72); }
+    .chip.disabled { opacity: .45; }
+    #resetBtn { padding: 0 15px; font-size: 13px; min-width: 56px; height: 42px; border-radius: 999px; white-space: nowrap; }
+    .filters { display: grid; gap: 16px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .searchRow { display:grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items:center; margin-top: 14px; }
+    input[type="search"] {
+      width: 100%; height: 42px; padding: 0 14px; border-radius: 16px; border: 1px solid var(--line);
+      background: #FFFFFF; color: var(--text); outline: none;
+    }
+    input[type="search"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(63,90,50,.10); }
+    .toolbar { display:flex; justify-content:space-between; gap: 12px; align-items:center; margin-bottom: 14px; }
+    .resultCount { color: var(--muted); font-size: 14px; }
+    .cards { display: grid; gap: 12px; }
+    .card {
+      position: relative; background: linear-gradient(180deg, #FFFFFF, #F7F3EA);
+      border: 1px solid var(--line); border-radius: 20px; padding: 16px; cursor: pointer; transition: .16s; overflow:hidden;
+    }
+    .card:hover { transform: translateY(-2px); border-color: #5F7A4E; box-shadow: 0 16px 30px rgba(30,30,28,.10); }
+    .cardTop { display:flex; justify-content:space-between; gap: 12px; align-items:flex-start; }
+    .cardTitle { display:flex; gap: 10px; align-items:flex-start; font-weight: 850; font-size: 18px; line-height: 1.35; }
+    .num { color: var(--accent); min-width: 28px; }
+    .tag { background: #E7E6D9; border: 1px solid #D8D1C5; color: var(--accent2); padding: 5px 9px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+    .reason { margin: 10px 0 0 38px; color: var(--muted); }
+    .meta { margin: 11px 0 0 38px; display:flex; gap: 8px; flex-wrap:wrap; color: var(--muted); font-size: 12px; }
+    .pill { border:1px solid var(--line); border-radius:999px; padding:4px 8px; background:#F1ECE3; }
+    .hasUrl { color: var(--ok); border-color: rgba(131,227,181,.35); }
+
+    .cardAction {
+      margin: 13px 0 0 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      padding: 9px 13px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #F7F3EA;
+      font-size: 13px;
+      font-weight: 850;
+      border: 1px solid var(--accent);
+    }
+    .cardAction:hover { background: var(--accent2); border-color: var(--accent2); }
+    .cardAction.disabled { background: #E7E6D9; color: var(--muted); border-color: var(--line); pointer-events: none; }
+    .empty { color: var(--muted); text-align:center; padding: 40px 20px; border: 1px dashed var(--line); border-radius: 20px; }
+    .modalBackdrop { position: fixed; inset: 0; background: rgba(30,30,28,.42); display:none; z-index: 50; padding: 18px; overflow: hidden; }
+    .modalBackdrop.show { display: flex; align-items: center; justify-content: center; }
+    .modal { width: min(760px, 100%); max-height: calc(100dvh - 36px); background: #FFFFFF; border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow); overflow:hidden; display: flex; flex-direction: column; }
+    .modalHead { padding: 18px 18px 12px; display:flex; justify-content:space-between; gap: 14px; align-items:flex-start; border-bottom: 1px solid var(--line); }
+    .modalTitle { margin:0; font-size: 22px; line-height:1.3; }
+    .close { border:0; background:#E7E6D9; color:var(--text); width:36px; height:36px; border-radius:999px; cursor:pointer; font-size:22px; }
+    .modalBody { padding: 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .modalGrid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .infoBox { border:1px solid var(--line); border-radius:16px; padding:10px; background:#F1ECE3; }
+    .infoBox small { display:block; color:var(--muted); margin-bottom:3px; }
+    .sectionTitle { color: var(--accent); font-weight: 800; margin: 14px 0 6px; }
+    .modalText { color: var(--text); margin:0; white-space: pre-wrap; }
+    .movements { color: var(--muted); margin-top: 6px; font-size: 14px; white-space: pre-wrap; }
+    .modalActions { display:flex; gap: 10px; margin-top: 18px; flex-wrap:wrap; }
+    .primaryLink { display:inline-flex; text-decoration:none; align-items:center; justify-content:center; padding: 12px 16px; border-radius: 999px; background: var(--accent); color:#F7F3EA; font-weight:850; }
+    .disabledLink { display:inline-flex; padding: 12px 16px; border-radius:999px; border:1px solid var(--line); color:var(--muted); }
+
+    .trialNotice {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .noticeCard {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(247,243,234,.88);
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+    }
+    .noticeCard b { color: var(--accent); }
+    .noticeTitle { font-weight: 900; color: var(--accent); margin-bottom: 6px; }
+    .noticeText { margin: 0; color: var(--muted); font-size: 14px; }
+    .trialBadgeRow { display:flex; flex-wrap:wrap; gap:8px; margin-top: 14px; }
+    .trialBadge { border:1px solid var(--line); background:#fff; border-radius:999px; padding:7px 10px; color:var(--accent2); font-size:13px; font-weight:800; }
+    .trialLabel {
+      display:inline-flex; align-items:center; gap:6px;
+      border:1px solid rgba(63,90,50,.25); background:rgba(63,90,50,.08); color:var(--accent);
+      border-radius:999px; padding:7px 10px; font-size:13px; font-weight:900; margin-bottom:8px;
+    }
+    .unlockBox {
+      border:1px dashed rgba(63,90,50,.35);
+      background:linear-gradient(135deg, rgba(63,90,50,.08), rgba(247,243,234,.88));
+      border-radius:20px; padding:16px; color:var(--muted);
+    }
+    .unlockBox b { color:var(--accent); }
+    .lockedNote {
+      margin-top: 14px; border:1px solid var(--line); border-radius:16px; padding:12px;
+      background:#F7F3EA; color:var(--muted); font-size:14px;
+    }
+    .modeHint { color:var(--muted); font-size:13px; margin-top:8px; }
+    .flowLine {
+      margin-top: 16px;
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      border-radius: 999px;
+      padding: 9px 12px;
+    }
+    .flowLine b { color: var(--accent); }
+    .unlockActions { display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    .ghostLink {
+      display:inline-flex; text-decoration:none; align-items:center; justify-content:center;
+      padding: 10px 13px; border-radius:999px; border:1px solid var(--line);
+      background:#fff; color:var(--accent); font-weight:850; font-size:13px;
+    }
+    .unlockNote { margin: 6px 0 0; color: var(--muted); }
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns:1fr; } .countBox { text-align:left; }
+      .layout { grid-template-columns:1fr; }
+      .humanWrap { min-height: 330px; }
+      .human { height:260px; width: 165px; }
+      .bodyBtn { font-size: 13px; padding: 7px 10px; min-width: 76px; }
+      .bodyBtn[data-body="肩頸"] { top: 16px; }
+      .bodyBtn[data-body="腰背"] { top: 106px; left: 4px; }
+      .bodyBtn[data-body="骨盆臀型"] { top: 132px; right: 4px; }
+      .bodyBtn[data-body="腿型"] { top: 218px; right: 14px; }
+      .bodyBtn[data-body="足底"] { bottom: 0; }
+      .modalBackdrop.show { display: flex; align-items: center; justify-content: center; }
+      .trialNotice { grid-template-columns:1fr; }
+      .modalGrid { grid-template-columns:1fr; }
+      .reason,.meta { margin-left:0; }
+      .cardTitle { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="trialNotice">
+      <div class="noticeCard">
+        <div class="noticeTitle">先選你今天最卡的地方</div>
+        <p class="noticeText">用 <b>部位、痛點、目的</b> 縮小範圍，先找到今天最適合的一套。</p>
+      </div>
+      <div class="noticeCard">
+        <div class="noticeTitle">每月更新＋社群討論</div>
+        <p class="noticeText">正式版會持續新增動作與組合。做完不知道怎麼選，回社群發文：<b>部位＋痛點＋做完感覺</b>。</p>
+      </div>
+    </section>
+
+    <section class="hero">
+      <div>
+        <div class="trialLabel">體驗版</div>
+        <div class="eyebrow">MOBILITYWITHNOAH</div>
+        <h1>小纖女體態檢索庫</h1>
+        <p class="lead">先不用看完全部。選你今天最卡的位置，找到一套真的用得上的。</p>
+        <div class="flowLine"><b>① 選部位</b> → <b>② 選痛點</b> → <b>③ 選目的</b> → <b>④ 跟著做一套</b></div>
+        <div class="librarySwitch" aria-label="選擇資料庫">
+          <button class="libraryTab active" data-library="combo" type="button">組合動作</button>
+          <button class="libraryTab" data-library="single" type="button">單一動作</button>
+        </div>
+        <div class="modeHint">體驗版開放 5 套組合、30 個單一動作。組合動作＝直接跟一套流程；單一動作＝快速處理一個卡點。</div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <aside class="panel">
+        <h2>① 選擇部位</h2>
+        <p class="hint">先從最有感的地方開始，不用一次全選。</p>
+        <div class="humanWrap">
+          <svg class="human" viewBox="0 0 200 340" aria-label="人體部位選擇圖">
+            <circle class="stroke" cx="100" cy="42" r="24"/>
+            <path class="stroke" d="M100 68 C98 92 96 112 94 132 M106 70 C112 96 116 112 120 136"/>
+            <path class="stroke" d="M76 90 C52 102 42 132 36 168 M124 90 C150 104 160 132 166 168"/>
+            <path class="stroke" d="M78 136 C66 174 62 210 62 252 M122 136 C134 174 138 210 138 252"/>
+            <path class="stroke" d="M62 252 L48 316 M138 252 L152 316"/>
+            <path class="stroke" d="M82 132 C96 142 108 142 122 132"/>
+            <ellipse class="hotspot" data-body="肩頸" cx="100" cy="84" rx="58" ry="34"/>
+            <ellipse class="hotspot" data-body="骨盆臀型" cx="100" cy="162" rx="52" ry="34"/>
+            <ellipse class="hotspot" data-body="腰背" cx="100" cy="124" rx="45" ry="28"/>
+            <ellipse class="hotspot" data-body="腿型" cx="100" cy="224" rx="58" ry="56"/>
+            <ellipse class="hotspot" data-body="足底" cx="100" cy="314" rx="62" ry="18"/>
+          </svg>
+          <div class="bodyBtns" id="bodyBtns"></div>
+        </div>
+      </aside>
+
+      <section class="panel">
+        <div class="filters">
+          <div>
+            <h2>② 選擇痛點</h2>
+            <div class="chips" id="painChips"></div>
+          </div>
+          <div>
+            <h2>③ 選擇目的</h2>
+            <div class="chips" id="purposeChips"></div>
+          </div>
+        </div>
+        <div class="searchRow">
+          <input id="searchInput" type="search" placeholder="也可以搜尋：肩頸、臀凹、腰痠、開髖..." />
+          <button class="smallBtn" id="resetBtn">重設</button>
+        </div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:18px 0;" />
+        <div class="toolbar">
+          <h2 style="margin:0;">推薦結果</h2>
+          <div class="resultCount" id="resultCount"></div>
+        </div>
+        <div class="cards" id="cards"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modalBackdrop" id="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modalHead">
+        <h3 class="modalTitle" id="modalTitle"></h3>
+        <button class="close" id="closeModal" aria-label="關閉">×</button>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const LIBRARIES = {"combo":[{"id":"wod091","content_type":"一套教學","source_type":"WOD","source_id":"WOD 91","body_part":"肩頸","pain_point":"肩胛控制差","pain_point_original":"聳肩","purpose":"找回發力","secondary_purpose":"改善線條","title":"肩膀放不下來，問題在肩胛","difficulty":"新手","order":"1","card_reason":"肩膀放不下來，通常不是肩膀太緊，而是肩胛沒有跟上。","detail":"適合坐著肩膀放不下來、拍照脖子短、上半身看起來厚重時，先不要急著挺胸。","included_movements":"趴姿接棒肩關節D356 前鋸肌伸展 肩胛骨D345 or D185 大風車肩胛骨D346 碰手肘 肩胛骨D370","button_text":"查看完整教學 →","url":"https://www.facebook.com/share/r/1H53r2xLMc/","raw_hook":"有些人不是故意聳肩","raw_page":"4-5"},{"id":"wod088","content_type":"一套教學","source_type":"WOD","source_id":"WOD 88","body_part":"腰背","pain_point":"久坐腰痠","pain_point_original":"骨盆歪","purpose":"先鬆開","secondary_purpose":"活動度","title":"久坐腰痠｜先鬆開側線","difficulty":"新手","order":"1","card_reason":"久坐腰痠時，腰不一定太弱，可能是髖和骨盆先卡住。","detail":"適合久坐後腰痛、骨盆前傾、屁股變方，或練臀常被大腿外側代償，可以先從這篇開始排查。","included_movements":"三點式扭轉 骨盆歪D293 -抱腿伸展骨盆歪D159 -動態盤腿D402","button_text":"查看完整教學 →","url":"https://www.facebook.com/share/r/1E4VYFbT3o/","raw_hook":"（純錄⾳）","raw_page":"11"},{"id":"wod090","content_type":"一套教學","source_type":"WOD","source_id":"WOD 90","body_part":"骨盆臀型","pain_point":"骨盆歪斜","pain_point_original":"骨盆歪","purpose":"活動度","secondary_purpose":"先鬆開","title":"骨盆歪，拉筋不是唯一解","difficulty":"新手","order":"1","card_reason":"骨盆歪不只是喬回去，左右能不能分開動更重要。","detail":"如果你做很多開髖還是覺得骨盆歪、單邊特別卡或越按越沒效，這篇可以先幫你判斷方向。","included_movements":"【坐鴿式起身】8x3|腰痛篇 【SI活動】 15x3 |腰痛篇 【單腿眼鏡蛇】15x3 |骨盆歪 【外轉臀拉伸】30sx3 |臀型篇","button_text":"查看完整教學 →","url":"https://www.facebook.com/share/r/1LB4A413gT/","raw_hook":"為什麼你的骨盆還是歪","raw_page":"8"},{"id":"wod066","content_type":"一套教學","source_type":"WOD","source_id":"WOD 66","body_part":"腿型","pain_point":"小腿腳踝緊","pain_point_original":"小腿腳踝緊","purpose":"改善線條","secondary_purpose":"先鬆開","title":"小腿長期腫的人，先調下肢線條","difficulty":"新手","order":"1","card_reason":"小腿長期腫不是狂拉小腿，先看它是不是每天都在代償。","detail":"當你小腿常腫、走路容易用到小腿、腿型看起來不俐落，通常不是只靠拉筋或按摩就會好。","included_movements":"忍者跪坐瘦小腿D168 or D88 脛前肌伸展 膝蓋篇D369 墊高離心腿後 腿型篇 D344","button_text":"查看完整教學 →","url":"https://www.facebook.com/share/r/17aAxVGq76/","raw_hook":"底下留言『小腿』，我傳給你【腿型判斷與對策】","raw_page":"63-64"},{"id":"wod077","content_type":"一套教學","source_type":"WOD","source_id":"WOD 77","body_part":"足底","pain_point":"足弓無力","pain_point_original":"足底筋膜炎","purpose":"找回發力","secondary_purpose":"活動度","title":"足弓沒力，30秒先測出來","difficulty":"新手","order":"1","card_reason":"足弓沒力時，先把足弓支撐找回來，小腿才不會一直加班。","detail":"當你做瑜珈、舞蹈、衝浪、跑跳運動，或覺得腳底支撐不足，通常不是只靠拉筋或按摩就會好。","included_movements":"閉眼樹式瘦小腿D170 踮腳尖 瘦小腿D298 下樓梯 膝蓋篇D211","button_text":"查看完整教學 →","url":"https://www.facebook.com/share/r/1CixNbnZBG/","raw_hook":"30秒測試","raw_page":"37-38"}],"single":[{"id":"ex_day_406_d330","content_type":"單一動作","source_type":"D","source_id":"406","body_part":"肩頸","pain_point":"圓肩厚背","pain_point_original":"每天30秒","purpose":"先鬆開","secondary_purpose":"","title":"斜角伸展","difficulty":"中階","order":"1","card_reason":"如果肩膀往前捲、背看起來厚，先做「斜角伸展」，會比直接加強更容易找到感覺。","detail":"適合肩膀往前捲、背看起來厚，胸口也打不開的人放在訓練前，先整理張力，再進入主要動作。","movement_name":"斜角伸展","movement_code":"D330","sets_reps":"30秒","equipment":"徒手","body_position":"側躺","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1Bv4mHLtef/","content_status":"https://www.facebook.com/share/r/1Bv4mHLtef/","raw_hook":"每天30秒","raw_day":"406","raw_page":"10"},{"id":"ex_day_398_d124","content_type":"單一動作","source_type":"D","source_id":"398","body_part":"肩頸","pain_point":"圓肩厚背","pain_point_original":"每天做一點","purpose":"改善線條","secondary_purpose":"找回發力","title":"坐姿V字滑行","difficulty":"進階","order":"1","card_reason":"這個動作主打圓肩厚背，重點是把線條被拉歪的地方整理回來，不是一直追求更大幅度。","detail":"做完可以回頭測同一個角度，看看上半身比較不會縮成一團，效果會比單純硬拉更清楚。","movement_name":"坐姿V字滑行","movement_code":"D124","sets_reps":"依影片跟練","equipment":"牆面","body_position":"坐姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/18kFdsWqHm/","content_status":"https://www.facebook.com/share/r/18kFdsWqHm/","raw_hook":"每天做一點","raw_day":"398","raw_page":"23-24"},{"id":"ex_day_384_d125","content_type":"單一動作","source_type":"D","source_id":"384","body_part":"肩頸","pain_point":"圓肩厚背","pain_point_original":"這是你用來改善體態的動作","purpose":"找回發力","secondary_purpose":"先鬆開","title":"招財貓","difficulty":"中階","order":"1","card_reason":"「招財貓」可以當成重新校準的一步，幫身體找回比較順的方向。","detail":"先做小範圍就好，讓胸口和肩胛位置找到方向，通常比一次做到很深更有用。","movement_name":"招財貓","movement_code":"D125","sets_reps":"依影片跟練","equipment":"瑜伽磚","body_position":"趴姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1CkrHt87U5/","content_status":"https://www.facebook.com/share/r/1CkrHt87U5/","raw_hook":"這是你用來改善體態的動作","raw_day":"384","raw_page":"38"},{"id":"ex_day_382","content_type":"單一動作","source_type":"單一動作","source_id":"382","body_part":"肩頸","pain_point":"肩頸緊繃","pain_point_original":"你每天洗頭","purpose":"先鬆開","secondary_purpose":"","title":"頭部按摩","difficulty":"中階","order":"1","card_reason":"如果脖子緊、肩頸沉，先做「頭部按摩」，會比直接加強更容易找到感覺。","detail":"適合脖子緊、肩頸沉，放鬆一下又很快緊回來的人放在訓練前，先整理張力，再進入主要動作。","movement_name":"頭部按摩","movement_code":"","sets_reps":"50 下","equipment":"徒手","body_position":"依影片姿勢","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/18jP8o2heX/","content_status":"https://www.facebook.com/share/r/18jP8o2heX/","raw_hook":"你每天洗頭","raw_day":"382","raw_page":"42-43"},{"id":"ex_day_381","content_type":"單一動作","source_type":"單一動作","source_id":"381","body_part":"肩頸","pain_point":"肩頸緊繃","pain_point_original":"這是你上班也可以做的伸展","purpose":"先鬆開","secondary_purpose":"","title":"眼睛按摩","difficulty":"中階","order":"1","card_reason":"這類「肩頸緊繃」常不是單一部位的問題，先從頸側和肩胛周圍張力開始整理。","detail":"不要急著追求痠痛感，先讓頸側和肩胛周圍張力變得比較會配合，身體才不會越練越緊。","movement_name":"眼睛按摩","movement_code":"","sets_reps":"100下","equipment":"徒手","body_position":"依影片姿勢","button_text":"查看動作影片 →","url":"https://www.facebook.com/reel/3926278547502900/","content_status":"https://www.facebook.com/reel/3926278547502900/","raw_hook":"這是你上班也可以做的伸展","raw_day":"381","raw_page":"44-45"},{"id":"ex_day_379_d124","content_type":"單一動作","source_type":"D","source_id":"379","body_part":"肩頸","pain_point":"圓肩厚背","pain_point_original":"駝背不好看,","purpose":"活動度","secondary_purpose":"先鬆開","title":"墊高V字滑行","difficulty":"中階","order":"1","card_reason":"這個方向能幫你讓關節動得更順；先求控制清楚，不用急著做很深。","detail":"適合肩膀往前捲、背看起來厚，胸口也打不開時先做一輪，重點是感覺變清楚，不是把動作做大。","movement_name":"墊高V字滑行","movement_code":"D124","sets_reps":"2分鐘","equipment":"瑜伽磚","body_position":"躺姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/18vTaEBpnv/","content_status":"https://www.facebook.com/share/r/18vTaEBpnv/","raw_hook":"駝背不好看,","raw_day":"379","raw_page":"47"},{"id":"ex_day_408_d373","content_type":"單一動作","source_type":"D","source_id":"408","body_part":"腰背","pain_point":"單邊腰痛","pain_point_original":"每天30秒","purpose":"找回發力","secondary_purpose":"先鬆開","title":"單腿前彎","difficulty":"中階","order":"1","card_reason":"「單腿前彎」可以當成重新校準的一步，幫身體找回比較順的方向。","detail":"先做小範圍就好，讓骨盆兩側和側腰支撐找到方向，通常比一次做到很深更有用。","movement_name":"單腿前彎","movement_code":"D373","sets_reps":"30秒","equipment":"瑜伽磚、牆面","body_position":"依影片姿勢","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1BQcpeeR5A/","content_status":"https://www.facebook.com/share/r/1BQcpeeR5A/","raw_hook":"每天30秒","raw_day":"408","raw_page":"11"},{"id":"ex_day_407_d338","content_type":"單一動作","source_type":"D","source_id":"407","body_part":"腰背","pain_point":"脊椎不順","pain_point_original":"D338 四足前傾後傾","purpose":"改善線條","secondary_purpose":"活動度","title":"四足前傾後傾","difficulty":"進階","order":"1","card_reason":"比起一直拉最緊的地方，這個動作更像是在重整脊椎和胸廓的旋轉。","detail":"它比較像整理開關，先讓身體左右更容易平衡，再進入伸展或訓練會比較穩。","movement_name":"四足前傾後傾","movement_code":"D338","sets_reps":"依影片跟練","equipment":"徒手","body_position":"四足跪姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1BSMr7vSxf/","content_status":"https://www.facebook.com/share/r/1BSMr7vSxf/","raw_hook":"D338 四足前傾後傾","raw_day":"407","raw_page":"9"},{"id":"ex_day_400","content_type":"單一動作","source_type":"單一動作","source_id":"400","body_part":"腰背","pain_point":"下背壓力","pain_point_original":"這是你每天睡前","purpose":"先鬆開","secondary_purpose":"活動度","title":"久坐族剋星","difficulty":"中階","order":"1","card_reason":"「久坐族剋星」不是要你做到很酸，而是先整理腰背和骨盆的分工，讓腰不用一直自己扛。","detail":"適合久坐後腰下方很緊、站起來總覺得腰在頂著的人，先做「久坐族剋星」先把過度緊繃降下來，再回頭測原本不順的地方。","movement_name":"久坐族剋星","movement_code":"","sets_reps":"依影片跟練","equipment":"滾筒","body_position":"坐姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1G2mjtSKwR/","content_status":"https://www.facebook.com/share/r/1G2mjtSKwR/","raw_hook":"這是你每天睡前","raw_day":"400","raw_page":"20"},{"id":"ex_day_395_d260","content_type":"單一動作","source_type":"D","source_id":"395","body_part":"腰背","pain_point":"下背壓力","pain_point_original":"這是你每天睡前","purpose":"先鬆開","secondary_purpose":"活動度","title":"簡單麻花","difficulty":"中階","order":"1","card_reason":"比起一直拉最緊的地方，這個動作更像是在重整腰背和骨盆的分工。","detail":"久坐後腰下方很緊、站起來總覺得腰在頂著的時候，先別急著加難度，做完再看腰不用一直自己扛有沒有改善。","movement_name":"簡單麻花","movement_code":"D260","sets_reps":"3秒；2秒","equipment":"徒手","body_position":"躺姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1ET9PsHgU5/","content_status":"https://www.facebook.com/share/r/1ET9PsHgU5/","raw_hook":"這是你每天睡前","raw_day":"395","raw_page":"25"},{"id":"ex_day_394","content_type":"單一動作","source_type":"單一動作","source_id":"394","body_part":"腰背","pain_point":"下背壓力","pain_point_original":"這是你每天最值得投資時間的動作","purpose":"改善線條","secondary_purpose":"先鬆開","title":"滾筒RDL","difficulty":"進階","order":"1","card_reason":"如果久坐後腰下方很緊、站起來總覺得腰在頂著，先做「滾筒RDL」，會比直接加強更容易找到感覺。","detail":"適合久坐後腰下方很緊、站起來總覺得腰在頂著的人放在訓練前，先整理張力，再進入主要動作。","movement_name":"滾筒RDL","movement_code":"","sets_reps":"依影片跟練","equipment":"滾筒","body_position":"依影片姿勢","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/18VaBhTKDe/","content_status":"https://www.facebook.com/share/r/18VaBhTKDe/","raw_hook":"這是你每天最值得投資時間的動作","raw_day":"394","raw_page":"28"},{"id":"ex_day_393","content_type":"單一動作","source_type":"單一動作","source_id":"393","body_part":"腰背","pain_point":"下背壓力","pain_point_original":"這是你腰不舒服時該做的動作","purpose":"活動度","secondary_purpose":"先鬆開","title":"開腿橋式","difficulty":"進階","order":"1","card_reason":"這類「下背壓力」常不是單一部位的問題，先從腰背和骨盆的分工開始整理。","detail":"如果你常覺得久坐後腰下方很緊、站起來總覺得腰在頂著，先用「開腿橋式」確認身體哪裡比較不順，再慢慢加強。","movement_name":"開腿橋式","movement_code":"","sets_reps":"10圈","equipment":"徒手","body_position":"躺姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1EawzJZ151/","content_status":"https://www.facebook.com/share/r/1EawzJZ151/","raw_hook":"這是你腰不舒服時該做的動作","raw_day":"393","raw_page":"29"},{"id":"ex_day_409_d155","content_type":"單一動作","source_type":"D","source_id":"409","body_part":"骨盆臀型","pain_point":"髖卡打不開","pain_point_original":"很多人腳抬不高","purpose":"找回發力","secondary_purpose":"先鬆開","title":"蹲姿轉髖","difficulty":"新手","order":"1","card_reason":"想讓力量不要再跑錯地方，先看骨盆和大腿的活動有沒有配合；「蹲姿轉髖」就是做這件事。","detail":"適合開髖做很多還是覺得髖轉不順時使用；不用做到很深，先讓骨盆和大腿的活動有反應就好。","movement_name":"蹲姿轉髖","movement_code":"D155","sets_reps":"依影片跟練","equipment":"椅子","body_position":"坐姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1CqEcg7MTB/","content_status":"https://www.facebook.com/share/r/1CqEcg7MTB/","raw_hook":"很多人腳抬不高","raw_day":"409","raw_page":"7"},{"id":"ex_day_405_d225","content_type":"單一動作","source_type":"D","source_id":"405","body_part":"骨盆臀型","pain_point":"臀型不好看","pain_point_original":"這是用來幫你","purpose":"改善線條","secondary_purpose":"先鬆開","title":"側躺內外旋","difficulty":"進階","order":"1","card_reason":"這類「臀型不好看」常不是單一部位的問題，先從髖臀張力和發力順序開始整理。","detail":"不要急著追求痠痛感，先讓髖臀張力和發力順序變得比較會配合，身體才不會越練越緊。","movement_name":"側躺內外旋","movement_code":"D225","sets_reps":"10秒；5秒","equipment":"徒手","body_position":"側躺","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1GbThTpLT1/","content_status":"https://www.facebook.com/share/r/1GbThTpLT1/","raw_hook":"這是用來幫你","raw_day":"405","raw_page":"8"},{"id":"ex_day_404_d221","content_type":"單一動作","source_type":"D","source_id":"404","body_part":"骨盆臀型","pain_point":"髖卡打不開","pain_point_original":"這是你用來拉大腿前側的伸展","purpose":"先鬆開","secondary_purpose":"","title":"沙發伸展","difficulty":"中階","order":"1","card_reason":"先用「沙發伸展」把骨盆和大腿的活動叫回來，後面的訓練才不容易跑偏。","detail":"當開髖做很多還是覺得髖轉不順，可以先做「沙發伸展」；重點不是忍到很酸，而是讓骨盆和大腿的活動慢慢接回來。","movement_name":"沙發伸展","movement_code":"D221","sets_reps":"依影片跟練","equipment":"牆面、椅子、軟墊、沙發","body_position":"四足跪姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/18UCCSg972/","content_status":"https://www.facebook.com/share/r/18UCCSg972/","raw_hook":"這是你用來拉大腿前側的伸展","raw_day":"404","raw_page":"14-15"},{"id":"ex_day_403_d256","content_type":"單一動作","source_type":"D","source_id":"403","body_part":"骨盆臀型","pain_point":"髖卡打不開","pain_point_original":"每天30秒開髖","purpose":"找回發力","secondary_purpose":"活動度","title":"跳動青蛙","difficulty":"中階","order":"1","card_reason":"這個方向能幫你讓力量不要再跑錯地方；先求控制清楚，不用急著做很深。","detail":"適合開髖做很多還是覺得髖轉不順時先做一輪，重點是感覺變清楚，不是把動作做大。","movement_name":"跳動青蛙","movement_code":"D256","sets_reps":"30秒","equipment":"軟墊","body_position":"四足跪姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1B8TMhGj15/","content_status":"https://www.facebook.com/share/r/1B8TMhGj15/","raw_hook":"每天30秒開髖","raw_day":"403","raw_page":"12-13"},{"id":"ex_day_402_d299","content_type":"單一動作","source_type":"D","source_id":"402","body_part":"骨盆臀型","pain_point":"練臀沒感覺","pain_point_original":"我沒看過,超過25歲","purpose":"找回發力","secondary_purpose":"活動度","title":"動態盤腿","difficulty":"進階","order":"1","card_reason":"「動態盤腿」適合放在前面，先讓屁股比較容易上線，再接後面的動作。","detail":"這個動作可以放在第一步，先找回該出力的位置，讓後面的動作比較不會亂用力。","movement_name":"動態盤腿","movement_code":"D299","sets_reps":"依影片跟練","equipment":"徒手","body_position":"坐姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1JP9S3qpcR/","content_status":"https://www.facebook.com/share/r/1JP9S3qpcR/","raw_hook":"我沒看過,超過25歲","raw_day":"402","raw_page":"16"},{"id":"ex_day_401_d269","content_type":"單一動作","source_type":"D","source_id":"401","body_part":"骨盆臀型","pain_point":"臀型不好看","pain_point_original":"可以一次改善這三個點","purpose":"改善線條","secondary_purpose":"活動度","title":"趴駱駝式","difficulty":"中階","order":"1","card_reason":"它不是單純放鬆，而是讓髖臀張力和發力順序重新有反應，動作才會比較順。","detail":"如果你常覺得臀凹、假胯或屁股線條看起來被拉住，先用「趴駱駝式」確認身體哪裡比較不順，再慢慢加強。","movement_name":"趴駱駝式","movement_code":"D269","sets_reps":"依影片跟練","equipment":"軟墊","body_position":"趴姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1buytEskNS/","content_status":"https://www.facebook.com/share/r/1buytEskNS/","raw_hook":"可以一次改善這三個點","raw_day":"401","raw_page":"17"},{"id":"ex_day_388_d142","content_type":"單一動作","source_type":"D","source_id":"388","body_part":"腿型","pain_point":"腿型不順","pain_point_original":"這是你每天睡前都該做的伸展","purpose":"先鬆開","secondary_purpose":"活動度","title":"青蛙前彎","difficulty":"中階","order":"1","card_reason":"「青蛙前彎」不是要你做到很酸，而是先整理髖膝踝的排列，讓腿線會比較順，可以放在訓練前先試。","detail":"適合腿看起來不直、走路時下肢很容易歪掉的人，先做「青蛙前彎」先把過度緊繃降下來，再回頭測原本不順的地方。","movement_name":"青蛙前彎","movement_code":"D142","sets_reps":"依影片跟練","equipment":"徒手","body_position":"坐姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1EkMY9U2wT/","content_status":"https://www.facebook.com/share/r/1EkMY9U2wT/","raw_hook":"這是你每天睡前都該做的伸展","raw_day":"388","raw_page":"35"},{"id":"ex_day_386","content_type":"單一動作","source_type":"單一動作","source_id":"386","body_part":"腿型","pain_point":"小腿腳踝緊","pain_point_original":"這是你晚上一定要做的伸展","purpose":"先鬆開","secondary_purpose":"改善線條","title":"小腿伸展","difficulty":"中階","order":"1","card_reason":"這個動作主打小腿腳踝緊，重點是先把過度緊繃降下來，不是一直追求更大幅度。","detail":"這個動作可以放在第一步，先把過度緊繃降下來，讓後面的動作比較不會亂用力。","movement_name":"小腿伸展","movement_code":"","sets_reps":"50下","equipment":"瑜伽磚","body_position":"依影片姿勢","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1G738WGvPg/","content_status":"https://www.facebook.com/share/r/1G738WGvPg/","raw_hook":"這是你晚上一定要做的伸展","raw_day":"386","raw_page":"39"},{"id":"ex_day_369","content_type":"單一動作","source_type":"單一動作","source_id":"369","body_part":"腿型","pain_point":"小腿腳踝緊","pain_point_original":"這是你用來放鬆的動作","purpose":"先鬆開","secondary_purpose":"活動度","title":"脛前肌伸展","difficulty":"中階","order":"1","card_reason":"這類「小腿腳踝緊」常不是單一部位的問題，先從腳踝到小腿的張力開始整理。","detail":"如果你常覺得小腿很硬、腳踝不靈活，先用「脛前肌伸展」確認身體哪裡比較不順，再慢慢加強。","movement_name":"脛前肌伸展","movement_code":"","sets_reps":"依影片跟練","equipment":"牆面、軟墊","body_position":"四足跪姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1Dtn4EngBJ/","content_status":"https://www.facebook.com/share/r/1Dtn4EngBJ/","raw_hook":"這是你用來放鬆的動作","raw_day":"369","raw_page":"63"},{"id":"ex_day_354","content_type":"單一動作","source_type":"單一動作","source_id":"354","body_part":"腿型","pain_point":"大腿前側緊","pain_point_original":"(大腿是被走粗的!)","purpose":"先鬆開","secondary_purpose":"先鬆開","title":"單腿躺椅","difficulty":"中階","order":"1","card_reason":"「單腿躺椅」適合放在前面，先讓前側線條比較不會一直緊繃，再接後面的動作。","detail":"這個動作可以放在第一步，先把過度緊繃降下來，讓後面的動作比較不會亂用力像「單腿躺椅」這類動作，可以放在想測感覺時先做。","movement_name":"單腿躺椅","movement_code":"","sets_reps":"依影片跟練","equipment":"徒手","body_position":"坐姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1Dvie27zUB/","content_status":"https://www.facebook.com/share/r/1Dvie27zUB/","raw_hook":"(大腿是被走粗的!)","raw_day":"354","raw_page":"90"},{"id":"ex_day_339_d121","content_type":"單一動作","source_type":"D","source_id":"339","body_part":"腿型","pain_point":"膝蓋不舒服","pain_point_original":"(腿彎彎,其實能救!)","purpose":"找回發力","secondary_purpose":"先鬆開","title":"靠牆娘娘蹲","difficulty":"中階","order":"1","card_reason":"「靠牆娘娘蹲」不是要你做到很酸，而是先整理髖、膝、腳踝的配合，讓膝蓋壓力會比較少。","detail":"適合跑跳或蹲跪時膝蓋不安心的人，先做「靠牆娘娘蹲」找回該出力的位置，再回頭測原本不順的地方。","movement_name":"靠牆娘娘蹲","movement_code":"D121","sets_reps":"依影片跟練","equipment":"牆面","body_position":"蹲姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/17g9SqsN5f/","content_status":"https://www.facebook.com/share/r/17g9SqsN5f/","raw_hook":"(腿彎彎,其實能救!)","raw_day":"339","raw_page":"107"},{"id":"ex_day_323","content_type":"單一動作","source_type":"單一動作","source_id":"323","body_part":"腿型","pain_point":"腿型不順","pain_point_original":"(當個有禮貌的人喔!)","purpose":"活動度","secondary_purpose":"先鬆開","title":"雙內收鴿式","difficulty":"進階","order":"1","card_reason":"「雙內收鴿式」可以當成重新校準的一步，幫身體找回比較順的方向。","detail":"當腿看起來不直、走路時下肢很容易歪掉，可以先做「雙內收鴿式」；重點不是忍到很酸，而是讓髖膝踝的排列慢慢接回來。","movement_name":"雙內收鴿式","movement_code":"","sets_reps":"30秒","equipment":"徒手","body_position":"坐姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1J6hiLk6Pm/","content_status":"https://www.facebook.com/share/r/1J6hiLk6Pm/","raw_hook":"(當個有禮貌的人喔!)","raw_day":"323","raw_page":"122"},{"id":"ex_day_397_d211","content_type":"單一動作","source_type":"D","source_id":"397","body_part":"足底","pain_point":"腳底痠脹","pain_point_original":"怎麼改善","purpose":"找回發力","secondary_purpose":"先鬆開","title":"半手槍蹲","difficulty":"進階","order":"1","card_reason":"想讓力量不要再跑錯地方，先看足底和小腿張力有沒有配合；「半手槍蹲」就是做這件事。","detail":"適合走太多路後腳底脹、小腿也跟著硬時使用；不用做到很深，先讓足底和小腿張力有反應就好。","movement_name":"半手槍蹲","movement_code":"D211","sets_reps":"50 下；211下","equipment":"牆面","body_position":"蹲姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1Ai87x2TP3/","content_status":"https://www.facebook.com/share/r/1Ai87x2TP3/","raw_hook":"怎麼改善","raw_day":"397","raw_page":"21-22"},{"id":"ex_day_389_d102","content_type":"單一動作","source_type":"D","source_id":"389","body_part":"足底","pain_point":"足弓無力","pain_point_original":"這是你脫鞋後用來救回腳趾的動作","purpose":"找回發力","secondary_purpose":"先鬆開","title":"娘娘蹲","difficulty":"進階","order":"1","card_reason":"它不是單純放鬆，而是讓足底支撐和下肢力線重新有反應，動作才會比較順。","detail":"不要急著追求痠痛感，先讓足底支撐和下肢力線變得比較會配合，身體才不會越練越緊。","movement_name":"娘娘蹲","movement_code":"D102","sets_reps":"依影片跟練","equipment":"徒手","body_position":"蹲姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1CTVqha9ES/","content_status":"https://www.facebook.com/share/r/1CTVqha9ES/","raw_hook":"這是你脫鞋後用來救回腳趾的動作","raw_day":"389","raw_page":"33-34"},{"id":"ex_day_376_d196","content_type":"單一動作","source_type":"D","source_id":"376","body_part":"足底","pain_point":"足弓無力","pain_point_original":"這是你用來調整足弓的動作","purpose":"找回發力","secondary_purpose":"活動度","title":"踮腳暫停","difficulty":"進階","order":"1","card_reason":"「踮腳暫停」不是要你做到很酸，而是先整理足底支撐和下肢力線，讓站立會更穩。","detail":"適合站久腳底塌、足弓撐不住的人，先做「踮腳暫停」找回該出力的位置，再回頭測原本不順的地方。","movement_name":"踮腳暫停","movement_code":"D196","sets_reps":"依影片跟練","equipment":"球","body_position":"蹲姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/18kPjpmXb9/","content_status":"https://www.facebook.com/share/r/18kPjpmXb9/","raw_hook":"這是你用來調整足弓的動作","raw_day":"376","raw_page":"52"},{"id":"ex_day_242","content_type":"單一動作","source_type":"單一動作","source_id":"242","body_part":"足底","pain_point":"足弓無力","pain_point_original":"(提醒:想要直腿,也練好這一招!)","purpose":"活動度","secondary_purpose":"先鬆開","title":"蝴蝶pivot","difficulty":"進階","order":"1","card_reason":"遇到站久腳底塌、足弓撐不住時，可以先用「蝴蝶pivot」把足底支撐和下肢力線接回來。","detail":"它比較像整理開關，先讓站立會更穩，再進入伸展或訓練會比較穩。","movement_name":"蝴蝶pivot","movement_code":"","sets_reps":"依影片跟練","equipment":"徒手","body_position":"蹲姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/17Erk4mbJk/","content_status":"https://www.facebook.com/share/r/17Erk4mbJk/","raw_hook":"(提醒:想要直腿,也練好這一招!)","raw_day":"242","raw_page":"193"},{"id":"ex_day_196","content_type":"單一動作","source_type":"單一動作","source_id":"196","body_part":"足底","pain_point":"足弓無力","pain_point_original":"(多做這動作,腳踝也會變細!)","purpose":"改善線條","secondary_purpose":"先鬆開","title":"踮腳暫停","difficulty":"進階","order":"1","card_reason":"「踮腳暫停」適合放在前面，先讓站立會更穩，再接後面的動作。","detail":"做完可以回頭測同一個角度，看看站立會更穩，效果會比單純硬拉更清楚。","movement_name":"踮腳暫停","movement_code":"","sets_reps":"1分鐘；15秒","equipment":"徒手","body_position":"蹲姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/1BXPMp88E7/","content_status":"https://www.facebook.com/share/r/1BXPMp88E7/","raw_hook":"(多做這動作,腳踝也會變細!)","raw_day":"196","raw_page":"229"},{"id":"ex_day_178","content_type":"單一動作","source_type":"單一動作","source_id":"178","body_part":"足底","pain_point":"腳底痠脹","pain_point_original":"(做完腳底又酸又爽,超解壓!)","purpose":"先鬆開","secondary_purpose":"","title":"足底踩球","difficulty":"中階","order":"1","card_reason":"這個動作主打腳底痠脹，重點是先把過度緊繃降下來，不是一直追求更大幅度。","detail":"做完可以回頭測同一個角度，看看隔天走路比較不沉，效果會比單純硬拉更清楚。","movement_name":"足底踩球","movement_code":"","sets_reps":"依影片跟練","equipment":"牆面、軟墊、球","body_position":"站姿","button_text":"查看動作影片 →","url":"https://www.facebook.com/share/r/17RVYEGYQk/","content_status":"https://www.facebook.com/share/r/17RVYEGYQk/","raw_hook":"(做完腳底又酸又爽,超解壓!)","raw_day":"178","raw_page":"244"}]};
+    const BODY_ORDER = ['肩頸','腰背','骨盆臀型','腿型','足底'];
+    const PURPOSE_ORDER = ['先鬆開','活動度','找回發力','改善線條'];
+    const LIB_META = {
+      combo: { label: '組合動作', button: '查看體驗教學 →', trialText: '5 套組合' },
+      single: { label: '單一動作', button: '查看動作影片 →', trialText: '30 個單一動作' }
+    };
+
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const state = { library: 'combo', body: '肩頸', pain: '', purpose: '', query: '' };
+
+    function safe(s) {
+      return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+    function uniq(arr) { return [...new Set(arr.filter(Boolean))]; }
+    function isUrl(s) { return /^https?:\/\//i.test(String(s || '').trim()); }
+    function currentData() { return LIBRARIES[state.library] || []; }
+    function libraryLabel() { return LIB_META[state.library].label; }
+
+    function countBy(list, key) {
+      const map = new Map();
+      list.forEach(item => {
+        const val = item[key];
+        if (!val) return;
+        map.set(val, (map.get(val) || 0) + 1);
+      });
+      return map;
+    }
+
+    function filteredForCounts(excludeKey) {
+      const q = state.query.toLowerCase();
+      return currentData().filter(x => {
+        if (excludeKey !== 'body' && state.body && x.body_part !== state.body) return false;
+        if (excludeKey !== 'pain' && state.pain && x.pain_point !== state.pain) return false;
+        if (excludeKey !== 'purpose' && state.purpose && x.purpose !== state.purpose) return false;
+        if (q) {
+          const hay = [x.id,x.source_id,x.title,x.card_reason,x.detail,x.pain_point,x.pain_point_original,x.purpose,x.secondary_purpose,x.included_movements,x.raw_hook,x.movement_name,x.movement_code,x.raw_text].join(' ').toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function getResults() {
+      const q = state.query.toLowerCase();
+      return currentData().filter(x => {
+        if (state.body && x.body_part !== state.body) return false;
+        if (state.pain && x.pain_point !== state.pain) return false;
+        if (state.purpose && x.purpose !== state.purpose) return false;
+        if (q) {
+          const hay = [x.id,x.source_id,x.title,x.card_reason,x.detail,x.pain_point,x.pain_point_original,x.purpose,x.secondary_purpose,x.included_movements,x.raw_hook,x.movement_name,x.movement_code,x.raw_text].join(' ').toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      }).sort((a,b) => {
+        const ao = Number(a.order || 999), bo = Number(b.order || 999);
+        if (ao !== bo) return ao - bo;
+        return String(b.source_id || '').localeCompare(String(a.source_id || ''), 'zh-Hant');
+      });
+    }
+
+    function updateHero() {
+      $$('.libraryTab').forEach(btn => btn.classList.toggle('active', btn.dataset.library === state.library));
+    }
+
+    function renderBodyButtons() {
+      const counts = countBy(currentData(), 'body_part');
+      $('#bodyBtns').innerHTML = BODY_ORDER.map(bp => `
+        <button class="bodyBtn ${state.body === bp ? 'active' : ''}" data-body="${safe(bp)}"><span>${safe(bp)}</span><span>${counts.get(bp) || 0} 筆</span></button>
+      `).join('');
+      $$('.bodyBtn').forEach(btn => btn.addEventListener('click', () => {
+        state.body = btn.dataset.body;
+        state.pain = '';
+        renderAll();
+      }));
+      $$('.hotspot').forEach(h => h.classList.toggle('active', h.dataset.body === state.body));
+    }
+
+    function renderPainChips() {
+      const activeBody = state.body || '肩頸';
+      const scoped = currentData().filter(x => x.body_part === activeBody);
+      const baseCounts = countBy(scoped, 'pain_point');
+      const pains = uniq(scoped.map(x => x.pain_point)).sort((a,b) => (baseCounts.get(b)||0) - (baseCounts.get(a)||0));
+      $('#painChips').innerHTML = [
+        `<button class="chip ${state.pain === '' ? 'active' : ''}" data-pain="">全部</button>`,
+        ...pains.map(p => `<button class="chip ${state.pain === p ? 'active' : ''}" data-pain="${safe(p)}">${safe(p)}</button>`)
+      ].join('');
+      $$('#painChips .chip').forEach(chip => chip.addEventListener('click', () => {
+        state.pain = state.pain === chip.dataset.pain ? '' : chip.dataset.pain;
+        renderAll();
+      }));
+    }
+
+    function renderPurposeChips() {
+      const availCounts = countBy(filteredForCounts('purpose'), 'purpose');
+      const available = uniq(currentData().map(x => x.purpose));
+      const purposes = PURPOSE_ORDER.filter(p => available.includes(p));
+      $('#purposeChips').innerHTML = [
+        `<button class="chip ${state.purpose === '' ? 'active' : ''}" data-purpose="">全部</button>`,
+        ...purposes.map(p => `<button class="chip ${state.purpose === p ? 'active' : ''} ${(availCounts.get(p)||0) === 0 ? 'disabled' : ''}" data-purpose="${safe(p)}">${safe(p)}</button>`)
+      ].join('');
+      $$('#purposeChips .chip').forEach(chip => chip.addEventListener('click', () => {
+        state.purpose = state.purpose === chip.dataset.purpose ? '' : chip.dataset.purpose;
+        renderAll();
+      }));
+    }
+
+    function renderResults() {
+      const results = getResults();
+      const filters = [state.body, state.pain, state.purpose].filter(Boolean);
+      const trialText = LIB_META[state.library].trialText;
+      $('#resultCount').textContent = filters.length || state.query ? `${results.length} 筆｜體驗內容：${trialText}` : `體驗內容：${trialText}`;
+      if (!results.length) {
+        $('#cards').innerHTML = `<div class="empty">目前沒有符合條件的內容，可以換一個痛點、目的或關鍵字。</div>`;
+        return;
+      }
+      const cardsHtml = results.map((x, idx) => {
+        const title = x.title || x.movement_name || '未命名';
+        const meta = state.library === 'single'
+          ? [x.purpose, x.difficulty || '新手', '單一動作']
+          : [x.difficulty || '新手', x.pain_point, '組合流程'];
+        return `
+          <article class="card" data-id="${safe(x.id)}">
+            <div class="cardTop">
+              <div class="cardTitle"><span class="num">${idx + 1}</span><span>${safe(title)}</span></div>
+              <span class="tag">${safe(x.purpose)}</span>
+            </div>
+            <p class="reason">${safe(x.card_reason || '')}</p>
+            <div class="meta">
+              ${meta.filter(Boolean).map(m => `<span class="pill">${safe(m)}</span>`).join('')}
+            </div>
+          </article>
+        `;
+      }).join('');
+      const unlockHtml = `
+        <div class="unlockBox">
+          <b>想解鎖完整版？</b>
+          <p class="unlockNote">正式版包含 200+ 個單一動作、150 套組合，並且每月持續更新。不是只多給你動作，而是讓你每次卡住時，更快知道今天該做哪一套。</p>
+          <div class="unlockActions">
+            <span class="ghostLink">做完回社群討論</span>
+            <span class="ghostLink">解鎖完整版</span>
+          </div>
+        </div>`;
+      $('#cards').innerHTML = cardsHtml + unlockHtml;
+      $$('.card').forEach(card => card.addEventListener('click', () => openModal(card.dataset.id)));
+    }
+
+    function openModal(id) {
+      const x = currentData().find(item => item.id === id);
+      if (!x) return;
+      const title = x.title || x.movement_name || '未命名';
+      $('#modalTitle').textContent = title;
+      const urlOk = isUrl(x.url);
+
+      const grid = `<div class="modalGrid">
+             <div class="infoBox"><small>目的</small><b>${safe(x.purpose)}</b></div>
+             <div class="infoBox"><small>難度</small><b>${safe(x.difficulty || '新手')}</b></div>
+           </div>`;
+
+      $('#modalBody').innerHTML = `
+        ${grid}
+        <div class="sectionTitle">推薦理由</div>
+        <p class="modalText">${safe(x.card_reason || '')}</p>
+        <div class="sectionTitle">怎麼用這個動作</div>
+        <p class="modalText">${safe(x.detail || '')}</p>
+        <div class="lockedNote">正式版包含 200+ 個單一動作、150 套組合，並且每月持續更新。不是只多給你動作，而是讓你每次卡住時，更快知道今天該做哪一套。做完後可以回社群發文：部位＋痛點＋做完感覺。</div>
+        <div class="modalActions">
+          ${urlOk ? `<a class="primaryLink" href="${safe(x.url)}" target="_blank" rel="noopener noreferrer">${safe(LIB_META[state.library].button)}</a>` : `<span class="disabledLink">尚未補上連結</span>`}
+        </div>
+      `;
+      $('#modalBackdrop').classList.add('show');
+    }
+
+    function closeModal() { $('#modalBackdrop').classList.remove('show'); }
+
+    function resetFilters() {
+      state.body = '肩頸';
+      state.pain = '';
+      state.purpose = '';
+      state.query = '';
+      $('#searchInput').value = '';
+      renderAll();
+    }
+
+    function switchLibrary(lib) {
+      state.library = lib;
+      state.body = '肩頸';
+      state.pain = '';
+      state.purpose = '';
+      state.query = '';
+      $('#searchInput').value = '';
+      renderAll();
+    }
+
+    function renderAll() {
+      updateHero();
+      renderBodyButtons();
+      renderPainChips();
+      renderPurposeChips();
+      renderResults();
+    }
+
+    function init() {
+      $$('.libraryTab').forEach(btn => btn.addEventListener('click', () => switchLibrary(btn.dataset.library)));
+      $('#resetBtn').addEventListener('click', resetFilters);
+      $('#closeModal').addEventListener('click', closeModal);
+      $('#modalBackdrop').addEventListener('click', e => { if (e.target.id === 'modalBackdrop') closeModal(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+      $$('.hotspot').forEach(el => el.addEventListener('click', () => {
+        state.body = el.dataset.body;
+        state.pain = '';
+        renderAll();
+      }));
+      $('#searchInput').addEventListener('input', e => { state.query = e.target.value || ''; renderAll(); });
+      renderAll();
+    }
+    init();
+  </script>
+</body>
+</html>
